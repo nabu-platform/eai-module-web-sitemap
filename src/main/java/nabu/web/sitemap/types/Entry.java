@@ -4,18 +4,18 @@ import java.net.URI;
 import java.util.Date;
 
 import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import be.nabu.eai.module.web.sitemap.beans.SiteMapEntry.ChangeFrequency;
+
 @XmlRootElement(name = "entry")
-public class SiteMapEntry {
+public class Entry {
 	private URI uri;
 	private Date lastModified;
 	// between 0 and 1
-	private double priority;
+	private Double priority;
 	private ChangeFrequency changeFrequency;
 	
-	@XmlElement(name = "loc")
 	@NotNull
 	public URI getUri() {
 		return uri;
@@ -24,7 +24,6 @@ public class SiteMapEntry {
 		this.uri = uri;
 	}
 
-	@XmlElement(name = "lastmod")
 	public Date getLastModified() {
 		return lastModified;
 	}
@@ -32,29 +31,17 @@ public class SiteMapEntry {
 		this.lastModified = lastModified;
 	}
 
-	@XmlElement(name = "priority")
-	public double getPriority() {
+	public Double getPriority() {
 		return priority;
 	}
-	public void setPriority(double priority) {
+	public void setPriority(Double priority) {
 		this.priority = priority;
 	}
 
-	@XmlElement(name = "changefreq")
 	public ChangeFrequency getChangeFrequency() {
 		return changeFrequency;
 	}
 	public void setChangeFrequency(ChangeFrequency changeFrequency) {
 		this.changeFrequency = changeFrequency;
-	}
-
-	public enum ChangeFrequency {
-		ALWAYS,
-		HOURLY,
-		DAILY,
-		WEEKLY,
-		MONTHLY,
-		YEARLY,
-		NEVER
 	}
 }

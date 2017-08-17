@@ -7,12 +7,13 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-import nabu.web.sitemap.types.SiteMapEntry;
+import nabu.web.sitemap.types.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import be.nabu.eai.module.web.application.WebApplication;
+import be.nabu.eai.module.web.sitemap.beans.SiteMapEntry;
 import be.nabu.eai.module.web.sitemap.beans.SiteMapEntrySet;
 import be.nabu.eai.module.web.sitemap.beans.SiteMapSetIndex;
 import be.nabu.eai.repository.util.SystemPrincipal;
@@ -53,13 +54,13 @@ public class SiteMapListener implements EventHandler<HTTPRequest, HTTPResponse> 
 		catch (IOException e) {
 			throw new RuntimeException(e);
 		}
-		indexPath = path;
+		indexPath = this.path;
 		if (!indexPath.endsWith("/")) {
 			indexPath += "/";
 		}
 		indexPath += map.getId() + ".xml";
 		
-		pagePath = path;
+		pagePath = this.path;
 		if (!pagePath.endsWith("/")) {
 			pagePath += "/";
 		}
@@ -172,10 +173,24 @@ public class SiteMapListener implements EventHandler<HTTPRequest, HTTPResponse> 
 		if (content == null) {
 			// the max is 50000 entries or 50mb (unzipped)
 			int amount = map.getConfig().getEntriesPerPage() != null ? map.getConfig().getEntriesPerPage() : 50000;
-			List<SiteMapEntry> entries = generator.generate(1l * amount * page, amount);
+			List<Entry> entries = generator.generate(1l * amount * page, amount);
 			if (entries != null && entries.size() > 0) {
 				SiteMapEntrySet set = new SiteMapEntrySet();
-				set.setEntries(entries);
+				List<SiteMapEntry> result = new ArrayList<SiteMapEntry>();
+				// we map the results so we can transform the URLs
+				for (Entry entry : entries) {
+					SiteMapEntry single = new SiteMapEntry();
+					single.setChangeFrequency(entry.getChangeFrequency());
+					single.setLastModified(entry.getLastModified());
+					single.setPriority(entry.getPriority());
+					URI uri = entry.getUri();
+					if (uri.getScheme() == null) {
+						uri = URIUtils.getChild(this.uri, uri.toString().replaceFirst("^[/]+", ""));
+					}
+					single.setUri(uri);
+					result.add(single);
+				}
+				set.setEntries(result);
 				content = set.marshal();
 				if (map.getConfig().getCacheProvider() != null) {
 					try {

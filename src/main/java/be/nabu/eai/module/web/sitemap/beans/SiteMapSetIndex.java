@@ -1,15 +1,15 @@
 package be.nabu.eai.module.web.sitemap.beans;
 
-import java.io.ByteArrayOutputStream;
-import java.nio.charset.Charset;
+import java.io.StringWriter;
 import java.util.List;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import nabu.web.sitemap.types.SiteMapEntry;
+import be.nabu.libs.types.BaseTypeInstance;
+import be.nabu.libs.types.binding.xml.XMLMarshaller;
+import be.nabu.libs.types.java.BeanInstance;
+import be.nabu.libs.types.java.BeanType;
 
 @XmlRootElement(name = "sitemapindex", namespace="http://www.sitemaps.org/schemas/sitemap/0.9")
 public class SiteMapSetIndex {
@@ -25,15 +25,19 @@ public class SiteMapSetIndex {
 	}
 	
 	public String marshal() {
-		ByteArrayOutputStream output = new ByteArrayOutputStream();
+		XMLMarshaller marshaller = new XMLMarshaller(new BaseTypeInstance(new BeanType<SiteMapSetIndex>(SiteMapSetIndex.class)));
+		marshaller.setAllowDefaultNamespace(true);
+		marshaller.setDefaultNamespace("http://www.sitemaps.org/schemas/sitemap/0.9");
+		marshaller.setPrettyPrint(true);
+		marshaller.setAllowXSI(false);
+		StringWriter writer = new StringWriter();
 		try {
-			JAXBContext context = JAXBContext.newInstance(getClass());
-			context.createMarshaller().marshal(this, output);
+			marshaller.marshal(writer, new BeanInstance<SiteMapSetIndex>(this));
 		}
-		catch (JAXBException e) {
+		catch (Exception e) {
 			throw new RuntimeException(e);
 		}
-		return new String(output.toByteArray(), Charset.forName("UTF-8"));
+		return writer.toString();
 	}
 	
 }

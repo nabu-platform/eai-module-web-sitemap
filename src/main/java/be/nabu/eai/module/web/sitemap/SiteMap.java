@@ -55,7 +55,7 @@ public class SiteMap extends JAXBArtifact<SiteMapConfiguration> implements WebFr
 			}
 			
 			EventSubscription<HTTPRequest, HTTPResponse> subscription = artifact.getDispatcher().subscribe(HTTPRequest.class, new SiteMapListener(artifact, path, this, uri));
-			subscription.filter(HTTPServerUtils.limitToPath(path));
+			subscription.filter(HTTPServerUtils.limitToPath(path == null ? "/" : path));
 			subscriptions.put(getKey(artifact, path), subscription);
 			
 			String robots = artifact.getRobots();

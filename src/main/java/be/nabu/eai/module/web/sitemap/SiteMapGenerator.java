@@ -2,8 +2,13 @@ package be.nabu.eai.module.web.sitemap;
 
 import java.util.List;
 
-import nabu.web.sitemap.types.SiteMapEntry;
+import javax.jws.WebParam;
+import javax.jws.WebResult;
+import javax.validation.constraints.NotNull;
+
+import nabu.web.sitemap.types.Entry;
 
 public interface SiteMapGenerator {
-	public List<SiteMapEntry> generate(Long offset, Integer limit);
+	@WebResult(name = "entries")
+	public List<Entry> generate(@NotNull @WebParam(name = "offset") Long offset, @NotNull @WebParam(name = "limit") Integer limit);
 }
