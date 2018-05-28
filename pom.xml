@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>nabu</groupId>
 	<artifactId>eai-module-web-sitemap</artifactId>
-	<version>1.0-SNAPSHOT</version>
+	<version>${nabu-eai-module-web-sitemap-version}</version>
 	<name>eai-module-web-sitemap</name>
 	<url>http://nabu.be</url>
 
