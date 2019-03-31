@@ -10,5 +10,5 @@ import nabu.web.sitemap.types.Entry;
 
 public interface SiteMapGenerator {
 	@WebResult(name = "entries")
-	public List<Entry> generate(@NotNull @WebParam(name = "offset") Long offset, @NotNull @WebParam(name = "limit") Integer limit);
+	public List<Entry> generate(@NotNull @WebParam(name = "webApplicationId") String webApplicationId);
 }

@@ -1,7 +1,6 @@
 package be.nabu.eai.module.web.sitemap;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -16,7 +15,6 @@ import be.nabu.eai.module.web.application.WebApplication;
 import be.nabu.eai.module.web.sitemap.beans.SiteMapEntry;
 import be.nabu.eai.module.web.sitemap.beans.SiteMapEntrySet;
 import be.nabu.eai.module.web.sitemap.beans.SiteMapSetIndex;
-import be.nabu.eai.repository.util.SystemPrincipal;
 import be.nabu.libs.events.api.EventHandler;
 import be.nabu.libs.http.HTTPCodes;
 import be.nabu.libs.http.HTTPException;
@@ -25,7 +23,6 @@ import be.nabu.libs.http.api.HTTPResponse;
 import be.nabu.libs.http.core.DefaultHTTPResponse;
 import be.nabu.libs.http.core.HTTPUtils;
 import be.nabu.libs.resources.URIUtils;
-import be.nabu.libs.services.pojo.POJOUtils;
 import be.nabu.utils.io.IOUtils;
 import be.nabu.utils.mime.impl.MimeHeader;
 import be.nabu.utils.mime.impl.PlainMimeContentPart;
@@ -37,7 +34,6 @@ public class SiteMapListener implements EventHandler<HTTPRequest, HTTPResponse> 
 	private SiteMap map;
 	private URI uri;
 	private Logger logger = LoggerFactory.getLogger(getClass());
-	private SiteMapGenerator generator;
 	private String indexPath;
 	private String pagePath;
 	
@@ -46,14 +42,6 @@ public class SiteMapListener implements EventHandler<HTTPRequest, HTTPResponse> 
 		this.uri = uri;
 		this.path = path == null ? "/" : path;
 		this.map = map;
-		// load any configuration that applies
-		Method method = WebApplication.getMethod(SiteMapGenerator.class, "generate");
-		try {
-			generator = POJOUtils.newProxy(SiteMapGenerator.class, application.wrap(map.getConfig().getGeneratorService(), method), map.getRepository(), SystemPrincipal.ROOT);
-		}
-		catch (IOException e) {
-			throw new RuntimeException(e);
-		}
 		indexPath = this.path;
 		if (!indexPath.endsWith("/")) {
 			indexPath += "/";
@@ -172,13 +160,15 @@ public class SiteMapListener implements EventHandler<HTTPRequest, HTTPResponse> 
 		}
 		if (content == null) {
 			// the max is 50000 entries or 50mb (unzipped)
-			int amount = map.getConfig().getEntriesPerPage() != null ? map.getConfig().getEntriesPerPage() : 50000;
-			List<Entry> entries = generator.generate(1l * amount * page, amount);
-			if (entries != null && entries.size() > 0) {
+			int amount = Math.min(map.getConfig().getEntriesPerPage() != null ? map.getConfig().getEntriesPerPage() : 50000, 50000);
+			// TODO: limit per page
+			List<Entry> entries = map.generate(application);
+			if (entries != null && entries.size() > amount * page) {
 				SiteMapEntrySet set = new SiteMapEntrySet();
 				List<SiteMapEntry> result = new ArrayList<SiteMapEntry>();
 				// we map the results so we can transform the URLs
-				for (Entry entry : entries) {
+				for (int i = amount * page; i < Math.min(amount * (page + 1), entries.size()); i++) {
+					Entry entry = entries.get(i);
 					SiteMapEntry single = new SiteMapEntry();
 					single.setChangeFrequency(entry.getChangeFrequency());
 					single.setLastModified(entry.getLastModified());
@@ -204,4 +194,5 @@ public class SiteMapListener implements EventHandler<HTTPRequest, HTTPResponse> 
 		}
 		return content;
 	}
+	
 }

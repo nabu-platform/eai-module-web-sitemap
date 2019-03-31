@@ -8,15 +8,20 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import nabu.web.application.types.WebApplicationInformation;
+import nabu.web.sitemap.types.Entry;
+import be.nabu.eai.module.web.application.RobotEntryImpl;
 import be.nabu.eai.module.web.application.WebApplication;
 import be.nabu.eai.module.web.application.WebApplicationUtils;
 import be.nabu.eai.module.web.application.WebFragment;
 import be.nabu.eai.module.web.application.WebFragmentConfiguration;
+import be.nabu.eai.module.web.application.api.RobotEntry;
 import be.nabu.eai.repository.EAIRepositoryUtils;
 import be.nabu.eai.repository.api.Repository;
 import be.nabu.eai.repository.artifacts.jaxb.JAXBArtifact;
+import be.nabu.eai.repository.util.SystemPrincipal;
 import be.nabu.libs.artifacts.api.StartableArtifact;
 import be.nabu.libs.authentication.api.Permission;
 import be.nabu.libs.cache.impl.StringSerializer;
@@ -26,6 +31,7 @@ import be.nabu.libs.http.api.HTTPResponse;
 import be.nabu.libs.http.server.HTTPServerUtils;
 import be.nabu.libs.resources.URIUtils;
 import be.nabu.libs.resources.api.ResourceContainer;
+import be.nabu.libs.services.pojo.POJOUtils;
 import be.nabu.libs.types.api.ComplexType;
 import be.nabu.libs.types.api.DefinedType;
 import be.nabu.libs.types.api.Element;
@@ -58,14 +64,7 @@ public class SiteMap extends JAXBArtifact<SiteMapConfiguration> implements WebFr
 			subscription.filter(HTTPServerUtils.limitToPath(path == null ? "/" : path));
 			subscriptions.put(getKey(artifact, path), subscription);
 			
-			String robots = artifact.getRobots();
-			String entry = "Sitemap: " + URIUtils.getChild(uri, getId() + ".xml");
-			if (robots == null) {
-				artifact.setRobots(entry);
-			}
-			else {
-				artifact.setRobots(robots + "\n" + entry);
-			}
+			artifact.getRobotEntries().add(new RobotEntryImpl("Sitemap", URIUtils.getChild(uri, getId() + ".xml").toString()));
 		}
 	}
 
@@ -79,7 +78,14 @@ public class SiteMap extends JAXBArtifact<SiteMapConfiguration> implements WebFr
 					subscriptions.remove(key);
 				}
 			}
-		}		
+		}
+		// remove from the robots file
+		artifact.getRobotEntries().removeIf(new Predicate<RobotEntry>() {
+			@Override
+			public boolean test(RobotEntry t) {
+				return t.getKey().equals("Sitemap");
+			}
+		});
 	}
 	
 	private String getKey(WebApplication artifact, String path) {
@@ -135,5 +141,19 @@ public class SiteMap extends JAXBArtifact<SiteMapConfiguration> implements WebFr
 			}
 		}
 		return configurations;
+	}
+	
+	// TODO: need to limit this generation to the web application (only uris allowed that are relative to the host of this application and the path?)
+	public List<Entry> generate(WebApplication application) {
+		if (getConfig().getGeneratorService() != null) {
+			SiteMapGenerator generator = getGenerator(application);
+			return generator.generate(application.getId());
+		}
+		return null;
+	}
+
+	private SiteMapGenerator getGenerator(WebApplication application) {
+		Method method = WebApplication.getMethod(SiteMapGenerator.class, "generate");
+		return POJOUtils.newProxy(SiteMapGenerator.class, application.wrap(getConfig().getGeneratorService(), method), getRepository(), SystemPrincipal.ROOT);
 	}
 }
