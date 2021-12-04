@@ -57,7 +57,7 @@ public class SiteMap extends JAXBArtifact<SiteMapConfiguration> implements WebFr
 			URI uri;
 			try {
 				Integer port = proxied ? artifact.getConfig().getVirtualHost().getConfig().getServer().getConfig().getProxyPort() : information.getPort();
-				uri = new URI(scheme, information.getHost() + (port != null ? ":" + port : ""), path, null, null);
+				uri = new URI(information.getScheme(), information.getHost() + (information.getPort() != null ? ":" + information.getPort() : ""), path, null, null);
 			}
 			catch (URISyntaxException e) {
 				throw new RuntimeException(e);
