@@ -50,13 +50,13 @@ public class SiteMap extends JAXBArtifact<SiteMapConfiguration> implements WebFr
 			stop(artifact, path);
 		}
 		if (getConfig().getGeneratorService() != null) {
-			boolean proxied = artifact.getConfig().getVirtualHost().getConfig().getServer().getConfig().isProxied();
+			boolean proxied = artifact.getConfig().getVirtualHost().getServer().getConfig().isProxied();
 			WebApplicationInformation information = WebApplicationUtils.getInformation(artifact);
 			boolean secure = information.getSecure() != null && information.getSecure();
 			String scheme = secure ? "https" : "http";
 			URI uri;
 			try {
-				Integer port = proxied ? artifact.getConfig().getVirtualHost().getConfig().getServer().getConfig().getProxyPort() : information.getPort();
+				Integer port = proxied ? artifact.getConfig().getVirtualHost().getServer().getConfig().getProxyPort() : information.getPort();
 				uri = new URI(information.getScheme(), information.getHost() + (information.getPort() != null ? ":" + information.getPort() : ""), path, null, null);
 			}
 			catch (URISyntaxException e) {
